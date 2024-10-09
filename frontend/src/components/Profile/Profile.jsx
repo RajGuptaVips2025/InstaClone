@@ -7,7 +7,7 @@ import PostViewer from './PostViewer';
 import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import useGetUsersProfiles from '../../hooks/useGetUsersProfiles';
-import { setUserDetail } from '../../features/userSlice';
+import { setFollowing, setUserDetail } from '../../features/userSlice';
 
 function Profile() {
     const params = useParams();
@@ -16,6 +16,8 @@ function Profile() {
     const userDetails = useSelector((state) => state?.user?.userDetail); // Logged-in user details
     // console.log(userDetails)
     const userDetail = useSelector((state) => state.user.userDetail);
+    const following = useSelector((state) => state.user.following);
+    // console.log(following)
 
     useEffect(() => {
         console.log("Profile page userDetail:", userDetail);
@@ -49,8 +51,11 @@ function Profile() {
         try {
             // Fetch user data from the backend using the userId from URL (params)
             const response = await axios.get(`/api/user/profile/${userId}`, { withCredentials: true });
-            console.log(response.data.user)
-            console.log(response.data.user)
+            const responseFollowing = await axios.get(`/api/user/getFollowing/${userId}`, { withCredentials: true });
+            // console.log(response.data.user)
+            console.log(responseFollowing.data.user.following)
+            const following=responseFollowing?.data?.user?.following
+            dispatch(setFollowing(following))
             // const userDetail = response?.data?.user
             // dispatch(setUserDetail(userDetail))
             setUser(response.data.user); // Set the clicked user's profile

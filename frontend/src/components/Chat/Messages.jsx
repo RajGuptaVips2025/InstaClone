@@ -24,7 +24,9 @@ const Messages = ({ selectedUser }) => {
             />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
-          <span>{selectedUser?.username}</span>
+          {/* {id: '6703fa235555d007bc5439c8', name: 'qwer', type: 'group', _id: '6703fa235555d007bc5439c8', groupName: 'qwer', …} */}
+          <span>{selectedUser.type === 'user' ? selectedUser.username : selectedUser.groupName}</span>
+          {/* <span>{selectedUser}</span> */}
           <Link to={`/profile/${selectedUser?._id}`}>
             <Button className="h-8 my-2" variant="secondary">
               View Profile

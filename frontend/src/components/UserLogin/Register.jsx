@@ -19,8 +19,6 @@ const Register = () => {
             const user = await axios.post('/api/register', {
                 username, email, name, password,
             });
-            // if (response.status === 200) {
-            // }
             console.log('Registration Response:', user.data);
             console.log(user.data.newUser)
             const userDetail = user.data.newUser

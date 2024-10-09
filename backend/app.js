@@ -4,6 +4,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const db = require('./config/db');
 const { app, server } = require('./socket/socket')
+const cors = require('cors');
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
@@ -32,7 +33,10 @@ app.use('/public/images/uploads', express.static(path.join(__dirname, 'public', 
 app.use('/uploads', express.static(path.join(__dirname, '/public/images/uploads')));
 app.use(express.json());
 app.use(cookieParser());
-
+app.use(cors({
+    origin: 'http://localhost:5173', // Replace with your frontend URL
+    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+}));
 // Route handling
 app.use('/api', authRoutes);
 app.use('/api/user', userRoutes);

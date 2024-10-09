@@ -4,10 +4,10 @@ import { useEffect } from 'react'
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux'
 
-const useGetSuggestedUser = () => {
+const  useGetSuggestedUser = () => {
     const dispatch = useDispatch();
     const userDetails = useSelector((state) => state?.user?.userDetail);
-    console.log(userDetails._id);
+    // console.log(userDetails._id);
 
     useEffect(() => {
         const fetchSuggestions = async () => {
@@ -15,7 +15,7 @@ const useGetSuggestedUser = () => {
                 if (userDetails?._id) {
                     // Fetch user data excluding the current logged-in user
                     const response = await axios.get(`/api/user/profiles/${userDetails._id}`, { withCredentials: true });
-                    console.log('Fetched suggestions:', response.data);
+                    // console.log('Fetched suggestions:', response.data);
                     dispatch(setSuggestedUser(response.data.users));
                 }
             } catch (error) {

@@ -1,4 +1,5 @@
 const userModel = require('../models/user');
+const groupModel = require('../models/groupChat');
 const path = require('path');
 
 // Get user profile
@@ -6,12 +7,40 @@ const getProfile = async (req, res) => {
     try {
         const { id } = req.params; // Get user ID from the request parameters
         const user = await userModel.findById(id).select('-password'); // Find the user by ID and exclude the password field
+        const userP = await userModel.findById(id).populate({
+            path: 'following',
+            select: 'username' // Specify the fields you want to include here
+        })
+            .select('username'); // Find the user by ID and exclude the password field
+        // console.log("hkuhfuehfh   lehfehwf       ",userP)
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
         res.status(200).json({ user });
+    } catch (error) {
+        res.status(500).json({ message: 'An error occurred while fetching the user profile', error: error.message });
+    }
+};
+
+const getFollowing = async (req, res) => {
+    try {
+        const { id } = req.params; // Get user ID from the request parameters
+        const user = await userModel.findById(id).populate({
+            path: 'following',
+            select: 'username name profileImage' // Specify the fields you want to include here
+        })
+            .select('username'); // Find the user by ID and exclude the password field
+
+        const group = await groupModel.find({ participants: id })
+        console.log(group)
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ user, group });
     } catch (error) {
         res.status(500).json({ message: 'An error occurred while fetching the user profile', error: error.message });
     }
@@ -32,25 +61,6 @@ const getProfiles = async (req, res) => {
     }
 }
 
-// Get all users except the currently logged-in user
-// const getAllUsers = async (req, res) => {
-//     try {
-//         const { id } = req.params; // Get the current user's ID from the request parameters
-//         // console.log('line 39',req.user)
-//         const users = await userModel.find({ _id: { $ne: id } }); // Exclude the current user from the list
-
-//         if (users.length === 0) {
-//             return res.status(404).json({ message: 'No other users found' });
-//         }
-//         // console.log(users)
-
-//         res.status(200).json({ success: true, users });
-//     } catch (error) {
-//         console.error('Error fetching users:', error);
-//         res.status(500).json({ message: 'An error occurred while fetching users', error: error.message });
-//     }
-// };
-
 const getAllUsers = async (req, res) => {
     try {
         const { id } = req.params; // Get the current user's ID from the request parameters
@@ -66,8 +76,6 @@ const getAllUsers = async (req, res) => {
         res.status(500).json({ message: 'An error occurred while fetching users', error: error.message });
     }
 };
-
-
 
 // Update user profile
 const updateProfile = async (req, res) => {
@@ -97,55 +105,10 @@ const updateProfile = async (req, res) => {
     }
 };
 
-// const followOrUnfollow = async (req, res) => {
-//     try {
-//         const loggedInUser = req.id; // Id of the user that will follow or unfollow the other user.
-//         const userToFollowOrUnfollow = req.params.id; // user id of the user whom follow or unfollow.
-
-//         if (currentUser === targetUser) {
-//             return res.status(400).json({
-//                 message: 'You cannot follow/unfollow yourself',
-//                 success: false,
-//             })
-//         }
-
-//         const currentUser = await User.findById(loggedInUser); // Current user
-//         const targetUser = await User.findById(userToFollowOrUnfollow); // The user to follow/unfollow
-
-//         if (!targetUser || !currentUser) {
-//             return res.status(404).json("User not found");
-//         }
-
-//         // Check if currentUser is already following targetUser
-//         if (targetUser.followers.includes(req.body.userId)) {
-//             // Unfollow logic
-//             await targetUser.updateOne({ $pull: { followers: req.body.userId } });
-//             await currentUser.updateOne({ $pull: { following: req.params.id } });
-//             res.status(200).json("User unfollowed successfully");
-//         } else {
-//             // Follow logic
-//             await targetUser.updateOne({ $push: { followers: req.body.userId } });
-//             await currentUser.updateOne({ $push: { following: req.params.id } });
-//             res.status(200).json("User followed successfully");
-//         }
-//     } catch (error) {
-//         console.error("An error occurred while following/unfollowing the user!", error.message);
-//     }
-// };
-
 const followOrUnfollow = async (req, res) => {
     try {
         const loggedInUserId = req.user.userid; // The ID of the user making the request
         const userToFollowOrUnfollowId = req.params.id; // The ID of the user to follow/unfollow
-        // console.log('loggedInUserId    ',loggedInUserId)
-        // console.log('follow  ::  ::  ::  ',userToFollowOrUnfollowId)
-
-        // if (loggedInUserId === userToFollowOrUnfollowId) {
-        //     return res.status(400).json({
-        //         message: 'You cannot follow/unfollow yourself',
-        //         success: false,
-        //     });
-        // }
 
         const currentUser = await userModel.findById(loggedInUserId); // Current user
         const targetUser = await userModel.findById(userToFollowOrUnfollowId); // User to follow/unfollow   
@@ -172,7 +135,4 @@ const followOrUnfollow = async (req, res) => {
     }
 };
 
-
-
-
-module.exports = { getProfile, updateProfile, getProfiles, getAllUsers, followOrUnfollow };
+module.exports = { getProfile, updateProfile, getProfiles, getAllUsers, followOrUnfollow, getFollowing };

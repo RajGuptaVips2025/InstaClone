@@ -25,6 +25,9 @@ const Login = () => {
                 // Login successful, redirect to the home page or another component
                 console.log(response.data.user);
                 const userDetail = response.data.user;
+                console.log(response?.data?.user?.following)
+                const following=response?.data?.user?.following
+                const followers=response?.data?.user?.followers
                 navigate(`/profile/${userDetail._id}`);
                 dispatch(setUserDetail(userDetail));
             }

@@ -7,6 +7,8 @@ const userSlice = createSlice({
     usersProfiles: [], // Initial state should be an array, not null
     suggestedUser: [],
     selectedUser: null, // user that is selected will chatting.
+    following: [],
+    followers: [],
   },
   reducers: {
     setUserDetail: (state, action) => {
@@ -20,11 +22,17 @@ const userSlice = createSlice({
     },
     setSelectedUser: (state, action) => {
       state.selectedUser = action.payload;
+    },
+    setFollowing: (state, action) => {
+      state.following = action.payload;
+    },
+    setFollowers: (state, action) => {
+      state.followers = action.payload;
     }
   },
 });
 
-export const { setUserDetail, setUsersProfiles, setSuggestedUser, setSelectedUser } = userSlice.actions;
+export const { setUserDetail, setUsersProfiles, setSuggestedUser, setSelectedUser, setFollowing, setFollowers } = userSlice.actions;
 export default userSlice.reducer;
 
 

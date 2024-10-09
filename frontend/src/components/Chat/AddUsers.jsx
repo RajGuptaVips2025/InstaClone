@@ -1,31 +1,24 @@
 import React, { useState } from 'react';
+import useGetSearchUser from '@/hooks/useGetSearchUser'; // Import the hook
+import axios from 'axios';
 
 const AddUsers = ({ onClose }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
-    const [selectedUsers, setSelectedUsers] = useState([]);
+    const [searchTerm, setSearchTerm] = useState(''); // State for the search input
+    const [selectedUsers, setSelectedUsers] = useState([]); // State to hold selected users
+    const [groupname, setGroupname] = useState(''); // State for the group name input
+    console.log(selectedUsers)
 
-    // Mock search results (replace with API call)
-    const mockUsers = [
-        { id: 1, username: 'saurav', avatar: 'https://via.placeholder.com/150' },
-        { id: 2, username: 'sagar', avatar: 'https://via.placeholder.com/150' },
-        { id: 3, username: 'rushil', avatar: 'https://via.placeholder.com/150' },
-        { id: 4, username: 'harsh', avatar: 'https://via.placeholder.com/150' },
-        { id: 5, username: 'pankaj', avatar: 'https://via.placeholder.com/150' },
-        { id: 6, username: 'raghav', avatar: 'https://via.placeholder.com/150' },
-        { id: 7, username: 'kartikey', avatar: 'https://via.placeholder.com/150' },
-        // Add more mock users
-    ];
+    // Use the custom hook to fetch users based on search term
+    const { results: searchResults, loading, error } = useGetSearchUser(searchTerm);
 
     const handleSearch = (e) => {
         const value = e.target.value;
-        setSearchTerm(value);
+        setSearchTerm(value); // Update search term
+    };
 
-        // Filter mock users by search term (replace with actual API call)
-        const results = mockUsers.filter((user) =>
-            user.username.toLowerCase().includes(value.toLowerCase())
-        );
-        setSearchResults(results);
+    const handleGroupname = (e) => {
+        const value = e.target.value;
+        setGroupname(value); // Update group name
     };
 
     const handleSelectUser = (user) => {
@@ -33,6 +26,29 @@ const AddUsers = ({ onClose }) => {
             setSelectedUsers(selectedUsers.filter((u) => u !== user));
         } else {
             setSelectedUsers([...selectedUsers, user]);
+        }
+    };
+
+    const handleRemoveUser = (user) => {
+        setSelectedUsers(selectedUsers.filter((u) => u !== user));
+    };
+
+    const handleCreateGroup = async (e) => {
+        e.preventDefault();
+        console.log('Creating group with selected users:', selectedUsers);
+        const usersID = selectedUsers.map(obj => obj._id);
+        console.log('Participants IDs:', usersID);
+
+        try {
+            const res = await axios.post('/api/message/group/create', { groupName: groupname, participants: usersID });
+
+            // Log the complete response
+            // Optionally, close the modal or reset states
+            onClose();
+            setSelectedUsers([]);
+            setGroupname('');
+        } catch (error) {
+            console.error('Error creating group:', error.response ? error.response.data : error.message);
         }
     };
 
@@ -51,26 +67,60 @@ const AddUsers = ({ onClose }) => {
                 </button>
             </div>
 
-            {/* Search Input */}
+            {/* Add Users Label and Input */}
+            <label htmlFor="add-users" className="block text-gray-700 font-semibold mt-2">Add Users</label>
             <input
+                id="add-users"
                 type="text"
                 value={searchTerm}
                 onChange={handleSearch}
                 placeholder="Search users..."
-                className="mt-2 w-full p-2 border border-gray-300 rounded-md"
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
             />
+
+            {/* Group Name Label and Input */}
+            <label htmlFor="group-name" className="block text-gray-700 font-semibold mt-4">Group Name</label>
+            <input
+                id="group-name"
+                type="text"
+                value={groupname}
+                onChange={handleGroupname}
+                placeholder="Enter group name..."
+                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
+            />
+
+            {/* Added Users Section */}
+            <label className="block text-gray-700 font-semibold mt-2">Added</label>
+            <div className="flex flex-wrap gap-2 mt-2">
+                {selectedUsers.map((user) => (
+                    <div key={user._id} className="flex items-center space-x-2 bg-blue-100 text-blue-600 rounded-full px-3 py-1">
+                        <span>{user.username}</span>
+                        <button onClick={() => handleRemoveUser(user)}>
+                            {/* Adjust the size and color of the cross icon */}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 hover:text-blue-800" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 9l-3-3m0 6l3-3m0 0l3 3m-3-3l-3-3" clipRule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                ))}
+            </div>
+
+            {/* Loading State */}
+            {loading && <p>Loading...</p>}
+            {/* Error State */}
+            {error && <p className="text-red-500">{error}</p>}
 
             {/* Search Results */}
             <div className="mt-4">
                 {searchResults.length > 0 ? (
                     searchResults.map((user) => (
                         <div
-                            key={user.id}
+                            key={user._id}
                             onClick={() => handleSelectUser(user)}
                             className={`flex items-center p-2 rounded-lg cursor-pointer ${selectedUsers.includes(user) ? 'bg-blue-100' : ''
                                 }`}
                         >
-                            <img src={user.avatar} alt={user.username} className="w-10 h-10 rounded-full mr-2" />
+                            <img src={user.profilePicture} alt={user.username} className="w-10 h-10 rounded-full mr-2" />
                             <span>{user.username}</span>
                         </div>
                     ))
@@ -79,11 +129,12 @@ const AddUsers = ({ onClose }) => {
                 )}
             </div>
 
+            {/* Chat Button */}
             <div className="mt-4">
-                <button
+                <button onClick={handleCreateGroup}
                     className={`w-full p-2 rounded-lg text-white font-semibold ${selectedUsers.length === 0
-                            ? 'bg-blue-300 cursor-not-allowed'
-                            : 'bg-blue-500 hover:bg-blue-600'
+                        ? 'bg-blue-300 cursor-not-allowed'
+                        : 'bg-blue-500 hover:bg-blue-600'
                         }`}
                     disabled={selectedUsers.length === 0}
                 >
@@ -95,3 +146,4 @@ const AddUsers = ({ onClose }) => {
 };
 
 export default AddUsers;
+
